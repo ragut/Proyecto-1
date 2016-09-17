@@ -2,7 +2,9 @@ import logging
 import os
 import tornado.ioloop
 import tornado.web
+import tornado.escape
 import math
+import os.path
 
 
 from uniandes.cloud.controller.UserController import UserController
@@ -39,7 +41,7 @@ class LoginHandler(BaseHandler):
             if self.get_argument("next", None) is not None:
                 self.redirect(self.get_argument("next"))
             else:
-                self.redirect("/")
+                self.redirect("/admin")
         else:
             self.clear_cookie("user")
             self.render(settings["static_path"]+"/pages/login.html", error = True)
@@ -63,110 +65,97 @@ class SignUpHandler(BaseHandler):
     def post(self):
         names = self.get_argument("userNames")
         lastnames = self.get_argument("userLastnames")
-        email = self.get_argument("userEmail")
-        password = self.get_argument("userPassword")
-       # logo = self.request.files['companyLogo'][0]["body"]
+        email = self.get_argument("inputEmail")
+        password = self.get_argument("inputPassword")
 
         data = UserController().add_User(names, lastnames, email, password)
 
         if data is None:
             self.render(settings["static_path"]+"/pages/sign_up.html", error=True)
         else:
-            self.render(settings["static_path"]+"/pages/new_user.html", names=data.names,
+            self.render(settings["static_path"]+"/pages/admin.html", names=data.names,
                         lastnames = data.lastnames, host = self.request.host)
 
 class AdminHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         contest = ContestController().getUserContest(self.current_user.id)
-        self.render(settings["static_path"]+"/pages/admin.html", user = self.current_user, contest=contest)
+        self.render(settings["static_path"]+"/pages/admin.html", user = self.current_user, contests=contest)
 
 class ContestHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         url = self.request.uri.replace("/contest-admin/","").split("?")[0]
-        if url == "new":
-            self.render(settings["static_path"]+"/pages/new_contest.html",user = self.current_user)
-        elif url == "edit":
+        url1 = url.split("-")
+        if url1[0] == "new":
+            self.render(settings["static_path"]+"/pages/new_contest.html", user = self.current_user)
+        elif url1[0] == "edit":
             contest_id = self.get_argument("id")
             contest = ContestController().getContest(contest_id)
-            if contest.user_id == self.current_user.id:
-                self.render(settings["static_path"]+"/pages/edit_contest.html", company = self.current_user, contest = contest)
-            else:
-                self.render(settings["static_path"]+"/pages/other_user.html")
-        elif url == "delete":
+            self.render(settings["static_path"]+"/pages/edit_contest.html", user = self.current_user, contests = contest)
+
+        elif url1[0] == "delete":
             contest_id = self.get_argument("id")
             contest = ContestController().getContest(contest_id)
-            if contest.user_id == self.current_user.id:
-                ContestController().deleteContest(contest_id)
-                self.redirect("/admin")
-            else:
-                self.render(settings["static_path"]+"/pages/other_user.html")
-        elif url == "view":
-            contest_id = self.get_argument("id")
-            contest = ContestController().getContest(contest_id)
-            if contest.user_id == self.current_user.id:
-                videos = VideoController().getContestVideo(contest_id)
-                pages = int(math.ceil(len(videos)/9.0))
-                self.render(settings["static_path"]+"/pages/view_contest.html",user = self.current_user, contest = contest,videos = videos, pages = pages)
-            else:
-                self.render(settings["static_path"]+"/pages/other_user.html")
+            ContestController().deleteContest(contest_id)
+            self.redirect("/admin")
+
+        elif url1[0] == "view":
+            contest = ContestController().getURLContest(url1[1])
+            videos = VideoController().getContestVideo(contest.id)
+            pages = int(math.ceil(len(videos)/9.0))
+            self.render(settings["static_path"]+"/pages/view_contest.html",user = self.current_user, contests = contest, videos = videos, pages = pages)
+
 
     @tornado.web.authenticated
     def post(self):
-        url = self.request.uri.replace("/project-admin/","")
+        url = self.request.uri.replace("/contest-admin/","")
         if url == "save":
             user_id = self.get_argument("inputUserId")
-            name = self.get_argument("contestName")
-           # url = self.get_argument("contestURL")
+            names = self.get_argument("contestName")
+            url = self.get_argument("contestURL")
             date_ini = self.get_argument("contestIni")
             deadline = self.get_argument("contestDeadline")
             description = self.get_argument("contestDescription")
+            banner = self.request.files['bannerFile'][0]["body"]
 
-            if user_id == self.current_user.id:
-                ContestController().insertContest(user_id, name, date_ini, deadline, description)#MOFDIFICAR
-                self.redirect("/admin")
-            else:
-                self.render(settings["static_path"]+"/pages/other_user.html")
-        elif url == "save-edit":
+            ContestController().insertContest(user_id, names, date_ini, deadline, description, url, banner)
+            self.redirect("/admin")
+
+        elif url == "edit_contest":
             id = self.get_argument("inputId")
             user_id = self.get_argument("inputUserId")
-            name = self.get_argument("contestName")
+            names = self.get_argument("contestName")
+            url = self.get_argument("contestURL")
             date_ini = self.get_argument("contestIni")
             deadline = self.get_argument("contestDeadline")
             description = self.get_argument("contestDescription")
-            if user_id == self.current_user.id:
-                ContestController().updateContest( id, user_id,  name, date_ini, deadline, description)
-                self.redirect("/admin")
-            else:
-                self.render(settings["static_path"]+"/pages/other_user.html")
+            banner = self.request.files['bannerFile'][0]["body"]
+
+            ContestController().updateContest( id, user_id,  names, date_ini, deadline, description, url, banner)
+            self.redirect("/admin")
+
 
 class VideoHandler(BaseHandler):
     def get(self):
         url = self.request.uri.replace("/video/","").split("?")[0]
-        if url == "add":
+        if url == "new":
             user_id = self.get_argument("user")
             contest_id = self.get_argument("contest")
-            user = UserController().getUserId(user_id)
             contest = ContestController().getContest(contest_id)
-            self.render(settings["static_path"]+"/pages/video.html", user = user, contest = contest, error = False)
-        elif url == "show-all":
-            videos = VideoController().getOkVideos()
-            pages = int(math.ceil(len(videos)/9.0))
-            self.render(settings["static_path"]+"/pages/all_videos.html",videos = videos, pages = pages)
-
+            self.render(settings["static_path"]+"/pages/new_video.html", user = user_id, contests = contest, error = False)
 
     def post(self):
         url = self.request.uri.replace("/video/","").split("?")[0]
         if url == "save":
-            contest_id = self.get_argument("inputId")
+            contest_id = self.get_argument("inputContestId")
             user_id = self.get_argument("inputUserId")
-            email = self.get_argument("Email")
-            names_user = self.get_argument("Names")
-            lastnames_user = self.get_argument("LastNames")
-
-            video_file = self.request.files['fileVideo'][0]["body"]
-            video = VideoController().createVideo(user_id, contest_id, email, names_user, lastnames_user, video_file)
+            name_video = self.get_argument("videoName")
+            email = self.get_argument("videoEmail")
+            names_user = self.get_argument("videoUserName")
+            lastnames_user = self.get_argument("videoUserLastname")
+            video_file = self.request.files['videoFile'][0]["body"]
+            video = VideoController().createVideo(user_id, contest_id, name_video,  email, names_user, lastnames_user, video_file)
 
             user = UserController().getUserId(user_id)
             contest = ContestController().getContest(contest_id)
@@ -181,15 +170,12 @@ class VideoHandler(BaseHandler):
 
 class ContestPublicHandler(BaseHandler):
     def get(self):
-        url = self.request.uri.replace("/video/","").split("?")[0]
-        if url == "view":
-            user_id = self.get_argument("user")
-            contest_id = self.get_argument("contest")
-            user = UserController().getUserId(user_id)
-            contest = ContestController().getContest(contest_id)
-            videos = VideoController().getContestOkVideos(contest_id)
-            pages = int(math.ceil(len(videos)/9.0))
-            self.render(settings["static_path"]+"/pages/contest.html",user = user, contest = contest,videos = videos, design_upload=False, pages = pages)
+        url = self.request.uri.replace("/contest/","")
+
+        contest = ContestController().getURLContest(url)
+        videos = VideoController().getContestVideo(contest.id)
+        pages = int(math.ceil(len(videos)/9.0))
+        self.render(settings["static_path"]+"/pages/contest.html",user = self.current_user, contests = contest, videos = videos, pages = pages)
 
 class MainHandler(BaseHandler):
     def get(self):
@@ -214,8 +200,7 @@ if __name__ == "__main__":
         (r"/", MainHandler),
         (r"/login", LoginHandler),
         (r"/logout", LogoutHandler),
-        (r"/sign-up", SignUpHandler),
-        (r"/user/.*", UserHandler),
+        (r"/sign_up", SignUpHandler),
         (r"/contest-admin/.*", ContestHandler),
         (r"/contest/.*", ContestPublicHandler),
         (r"/video/.*", VideoHandler),
