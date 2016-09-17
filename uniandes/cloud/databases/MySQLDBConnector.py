@@ -82,7 +82,7 @@ class MySQLDBConnector():
 
 
     def user_url_exist(self, url):
-        if User.select().where(User.url == url).count() == 0:
+        if Contest.select().where(Contest.url == url).count() == 0:
             db.close()
             return False
         else:
@@ -158,18 +158,20 @@ class MySQLDBConnector():
         return videos
 
     def createContest(self, contest):
-        inserted = Contest.create(company_id = contest.contest_id,
-                           name = contest.name,
-                           description = contest.description,
-                           budget = Decimal(contest.budget),
-                           currency = contest.currency)
+        inserted = Contest.create(user_id_id = contest.user_id,
+                            names = contest.names,
+                            url = contest.url,
+                            baner = contest.banner,
+                            date_ini = contest.date_ini,
+                            deadline = contest.deadline,
+                            description = contest.description)
         contest.set_id(inserted.id)
         db.close()
         return contest
 
     def getUserContest(self, contest_id):
         contests = []
-        cp_prj = Contest.select().where(Contest.contest_id == int(contest_id)).order_by(Contest.id.desc())
+        cp_prj = Contest.select().where(Contest.user_id_id == int(contest_id)).order_by(Contest.id.desc())
         for contest in cp_prj:
             contests.append(contest.to_dictionary())
         db.close()
@@ -184,13 +186,24 @@ class MySQLDBConnector():
             db.close()
             return None
 
+    def getURLContest(self, url):
+        try:
+            contest = Contest.get(Contest.url == url)
+            db.close()
+            return contest.to_dictionary()
+        except:
+            db.close()
+            return None
+
     def updateContest(self, contest):
         contest = Contest(id=contest.id,
-                           company_id = contest.user_id,
-                           name = contest.name,
-                           description = contest.description,
-                           budget = Decimal(contest.budget),
-                           currency = contest.currency)
+                           user_id_id = contest.user_id,
+                            names = contest.names,
+                            url = contest.url,
+                            baner = contest.banner,
+                            date_ini = contest.date_ini,
+                            deadline = contest.deadline,
+                            description = contest.description)
         contest.save()
         db.close()
         return contest
@@ -232,21 +245,20 @@ class MySQLDBConnector():
             db.close()
             return -1
 
-    def createVideo(self, design):
-        inserted = Video.create(company_id = design.company_id,
-                                contest_id = design.contest_id,
-                                names = design.names,
-                                lastnames = design.lastnames,
-                                email = design.email,
-                                status = design.status,
-                                price = Decimal(design.price),
-                                file_name = design.file_name,
-                                original_file_extension = design.original_file_extension,
-                                date = datetime.datetime.strptime(design.date, "%Y/%m/%d - %H:%M:%S"))
+    def createVideo(self, video):
+        inserted = Video.create(user_id = video.user_id,
+                                contest_id = video.contest_id,
+                                video_name  = video.video_name,
+                                email = video.email,
+                                names_user = video.names_user,
+                                lastnames_user = video.lastnames_user,
+                                status = video.status,
+                                original_file = video.original_file,
+                                date = datetime.datetime.strptime(video.date, "%Y/%m/%d - %H:%M:%S"))
 
-        design.set_id = inserted.id
+        video.set_id = inserted.id
         db.close()
-        return design
+        return video
 
 #//----  OBTIENE LISTA DE VIDEOS ----//
     def getContestOkVideos(self, contest_id):
