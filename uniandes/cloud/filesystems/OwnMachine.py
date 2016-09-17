@@ -10,22 +10,21 @@ class OwnMachine():
 
     def __init__(self):
         self.url_ori = os.path.abspath(__file__ + "/../../../../web/data/original")+"/"
-        self.url_thumb = os.path.abspath(__file__ + "/../../../../web/data/thumbnails")+"/"
         self.url_converted = os.path.abspath(__file__ + "/../../../../web/data/converted")+"/"
-        self.ulr_logo = os.path.abspath(__file__ + "/../../../../web/data/logos")+"/"
+        self.ulr_banner = os.path.abspath(__file__ + "/../../../../web/data/banner")+"/"
 
-    def save_company_logo(self, img, logo_filename):
-        img.save(self.ulr_logo+logo_filename,"png")
+    def save_contest_banner(self, img, banner_file):
+        img.save(self.ulr_banner+banner_file,"png")
         img.close()
 
-    def save_original_design(self, img, file_name, original_file_extension):
-        img.save(self.url_ori+file_name+"."+original_file_extension,original_file_extension)
-        img.close()
+    def save_original_video(self, video, file_name, original_file_extension):
+        os.mknod(self.url_ori+file_name+"."+original_file_extension)
+
 
     def delete_design(self, design):
         if os.path.exists(self.url_ori+design.file_name+'.'+design.original_file_extension):
                 os.remove(self.url_ori+design.file_name+'.'+design.original_file_extension)
-        if design.status == "Available":
+        if design.status == "OK":
             if os.path.exists(self.url_thumb+design.file_name+'.png'):
                 os.remove(self.url_thumb+design.file_name+'.png')
             if os.path.exists(self.url_converted+design.file_name+'.png'):
