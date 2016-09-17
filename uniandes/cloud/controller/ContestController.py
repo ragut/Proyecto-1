@@ -1,18 +1,24 @@
 from ..model.Contest import Contest
 from .VideoController import VideoController
-from .DatabasesService import DatabasesController
+from .DatabasesController import DatabasesController
+from .ImageService import ImageService
+from .FileController import FileController
 
 class ContestController():
 
     database = None
+    fileSystem = None
 
     def __init__(self):
         self.database = DatabasesController()
+        self.fileSystem = FileController()
 
 #//---- INSERTA CONCURSO    -----//
-    def insertContest(self, user_id, name, date_ini, deadline, description):
+    def insertContest(self, user_id, names, date_ini, deadline, description, url, baner):
         contest = Contest()
-        contest.set_variables_contest(user_id, name, date_ini, deadline, description)
+        contest.set_variables_contest(user_id, names, date_ini, deadline, description, url)
+        img = ImageService().generate_img_thumnail_from_data(baner)
+        self.fileSystem.save_contest_banner(img, contest.banner)
         return self.database.createContest(contest)
 
 #//---- OBTIENE CONCURSOS POR USUARIO   ----//
@@ -22,7 +28,6 @@ class ContestController():
         for contest in data:
             newContest = Contest()
             newContest.set_variables_db(contest)
-            newContest.set_num_video(self.getContestVideoNumber(newContest.id))
             contests.append(newContest)
         return contests
 
@@ -31,13 +36,22 @@ class ContestController():
         data = self.database.getContest(contest_id)
         contest = Contest()
         contest.set_variables_db(data)
-        contest.set_num_video(self.getContestVideoNumber(contest.id))
+        return contest
+
+    #//-----    OBTIENE CONCURSO ESPECIFICO ----//
+    def getURLContest(self, contest_url):
+        data = self.database.getURLContest(contest_url)
+        contest = Contest()
+        contest.set_variables_db(data)
         return contest
 
 #//-----    ACTUALIZA CONCURSO ESPECIFICO ----//
-    def updateContest(self, id, user_id,  name, date_ini, deadline, description):
+    def updateContest(self, id, user_id,  name, date_ini, deadline, description, url, baner):
         contest = Contest()
-        contest.set_variables_contest(user_id,  name, date_ini, deadline, description)
+        contest.set_variables_contest(user_id,  name, date_ini, deadline, description, url)
+        #if baner is not None:
+        img = ImageService().generate_img(baner)
+        self.fileSystem.save_contest_banner(img, contest.banner)
         contest.set_id(id)
         return self.database.updateContest(contest)
 
@@ -46,6 +60,3 @@ class ContestController():
         VideoController().deleteContestVideo(id)
         return self.database.deleteContest(id)
 
-#//-----    OBTIENE NUMERO DE VIDEOS POR CONCURSO ----//
-    def getContestVideoNumber(self, contest_id):
-        return self.database.getContestVideoNumber(contest_id)

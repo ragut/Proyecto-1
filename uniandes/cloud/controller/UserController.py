@@ -2,8 +2,8 @@ import base64
 
 from ..model.User import User
 from .ImageService import ImageService
-from .DatabasesService import DatabasesController
-from .FileSystemService import FileSystemService
+from .DatabasesController import DatabasesController
+from .FileController import FileController
 
 class UserController():
 
@@ -12,7 +12,7 @@ class UserController():
 
     def __init__(self):
         self.database = DatabasesController()
-        self.fileSystem = FileSystemService()
+        self.fileSystem = FileController()
 
     def add_User(self, names, lastnames, email, password):
         user = User()
@@ -30,6 +30,7 @@ class UserController():
 
     def login_user(self, email, password):
         data = self.database.confirmLogin(email, base64.b64encode(password))
+        #data = self.database.confirmLogin(email, password)
         user = None
         if data is not None:
             user = User()

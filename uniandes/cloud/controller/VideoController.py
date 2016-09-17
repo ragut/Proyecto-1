@@ -1,7 +1,7 @@
-from .DatabasesService import DatabasesController
+from .DatabasesController import DatabasesController
 from ..model.ContestVideo import ContestVideo
 from .ImageService import ImageService
-from .FileSystemService import FileSystemService
+from .FileController import FileController
 
 class VideoController():
 
@@ -10,15 +10,15 @@ class VideoController():
 
     def __init__(self):
         self.database = DatabasesController()
-        self.fileSystem = FileSystemService()
+        self.fileSystem = FileController()
 
-#//----     CREA EL VIDEO   -----//MODIFICAR LA IMAGEN POR VIDEO
-    def createVideo(self, user_id, contest_id, email, names_user, lastnames_user, video):
-        p_video = ImageService().generate_img_from_data(video)
-        width, height = p_video.size
-        if width >= 800 and height >= 800:
+#//----     CREA EL VIDEO   -----//
+    def createVideo(self, user_id, contest_id, name_video, email, names_user, lastnames_user, videoFile):
+        #p_video = ImageService().generate_img_from_data(videoFile)
+        p_video = videoFile
+        if videoFile.format != ".mp4":
             video = ContestVideo()
-            video.set_variables_video(user_id,contest_id, email, names_user, lastnames_user, "On Process",p_video.format)
+            video.set_variables_video(user_id,contest_id, name_video, email, names_user, lastnames_user, "Processing",videoFile.format)
             self.fileSystem.save_original_video(p_video, video.video_name, video.original_file)
             return self.database.createVideo(video)
         else:
