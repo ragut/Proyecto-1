@@ -1,5 +1,7 @@
 import os
 import os.path
+import StringIO
+
 
 class OwnMachine():
 
@@ -18,25 +20,10 @@ class OwnMachine():
         img.close()
 
     def save_original_video(self, video, file_name, original_file_extension):
-        os.mknod(self.url_ori+file_name+"."+original_file_extension)
-
-
-    def delete_design(self, design):
-        if os.path.exists(self.url_ori+design.file_name+'.'+design.original_file_extension):
-                os.remove(self.url_ori+design.file_name+'.'+design.original_file_extension)
-        if design.status == "OK":
-            if os.path.exists(self.url_thumb+design.file_name+'.png'):
-                os.remove(self.url_thumb+design.file_name+'.png')
-            if os.path.exists(self.url_converted+design.file_name+'.png'):
-                os.remove(self.url_converted+design.file_name+'.png')
-
-    def save_converted_image(self, img, design):
-        img.save(self.url_converted+design.file_name+'.png','png')
-        img.close()
-
-    def save_thumbnail_image(self, img, design):
-        img.save(self.url_thumb+design.file_name+'.png','png')
-        img.close()
+        path = os.path.join(self.url_ori,file_name+"."+original_file_extension)
+        fileObj = open(path, 'wb')
+        fileObj.write(video)
+        fileObj.close()
 
     def get_converted_url(self):
         return self.url_converted

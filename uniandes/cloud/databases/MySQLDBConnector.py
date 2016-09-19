@@ -1,7 +1,6 @@
 import datetime
 import peewee as pw
-from decimal import Decimal
-
+import random
 db = pw.MySQLDatabase('cloud_2016_concurso',
                       host='127.0.0.1',
                       port=3306,
@@ -158,16 +157,21 @@ class MySQLDBConnector():
         return videos
 
     def createContest(self, contest):
+        if Contest.select().where(Contest.url == contest.url).count() > 0:
+            url_nueva = contest.url+"_"+contest.user_id+"_"+str(random.randrange(1, 101, 2))
+            contest.url = url_nueva
+
         inserted = Contest.create(user_id_id = contest.user_id,
-                            names = contest.names,
-                            url = contest.url,
-                            baner = contest.banner,
-                            date_ini = contest.date_ini,
-                            deadline = contest.deadline,
-                            description = contest.description)
+                        names = contest.names,
+                        url = contest.url,
+                        baner = contest.banner,
+                        date_ini = contest.date_ini,
+                        deadline = contest.deadline,
+                        description = contest.description)
         contest.set_id(inserted.id)
         db.close()
         return contest
+
 
     def getUserContest(self, contest_id):
         contests = []
@@ -186,6 +190,13 @@ class MySQLDBConnector():
             db.close()
             return None
 
+    def getContestAll(self):
+        contests = []
+        for contest in Contest.select().order_by(Contest.id.desc()):
+            contests.append(contest.to_dictionary())
+        db.close()
+        return contests
+
     def getURLContest(self, url):
         try:
             contest = Contest.get(Contest.url == url)
@@ -199,8 +210,18 @@ class MySQLDBConnector():
         contest = Contest(id=contest.id,
                            user_id_id = contest.user_id,
                             names = contest.names,
-                            url = contest.url,
                             baner = contest.banner,
+                            date_ini = contest.date_ini,
+                            deadline = contest.deadline,
+                            description = contest.description)
+        contest.save()
+        db.close()
+        return contest
+
+    def updateContestBanner(self, contest):
+        contest = Contest(id=contest.id,
+                           user_id_id = contest.user_id,
+                            names = contest.names,
                             date_ini = contest.date_ini,
                             deadline = contest.deadline,
                             description = contest.description)
