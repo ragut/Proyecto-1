@@ -1,7 +1,5 @@
 import os
 import os.path
-import StringIO
-
 
 class OwnMachine():
 
@@ -20,10 +18,7 @@ class OwnMachine():
         img.close()
 
     def save_original_video(self, video, file_name, original_file_extension):
-        path = os.path.join(self.url_ori,file_name+"."+original_file_extension)
-        fileObj = open(path, 'wb')
-        fileObj.write(video)
-        fileObj.close()
+        os.mknod(self.url_ori+file_name+"."+original_file_extension)
 
 
     def delete_design(self, design):

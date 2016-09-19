@@ -4,8 +4,8 @@ import tornado.ioloop
 import tornado.web
 import tornado.escape
 import math
-#from flask import request, redirect, url_for
-#from werkzeug.utils import secure_filename
+import os.path
+
 
 from uniandes.cloud.controller.UserController import UserController
 from uniandes.cloud.controller.ContestController import ContestController
@@ -73,7 +73,8 @@ class SignUpHandler(BaseHandler):
         if data is None:
             self.render(settings["static_path"]+"/pages/sign_up.html", error=True)
         else:
-            self.redirect("/login")
+            self.render(settings["static_path"]+"/pages/admin.html", names=data.names,
+                        lastnames = data.lastnames, host = self.request.host)
 
 class AdminHandler(BaseHandler):
     @tornado.web.authenticated
@@ -149,16 +150,13 @@ class VideoHandler(BaseHandler):
         if url == "save":
             contest_id = self.get_argument("inputContestId")
             user_id = self.get_argument("inputUserId")
-            url = self.get_argument("inputContestURL")
             name_video = self.get_argument("videoName")
             email = self.get_argument("videoEmail")
             names_user = self.get_argument("videoUserName")
             lastnames_user = self.get_argument("videoUserLastname")
-            uploaded_file = self.request.files['videoFile']
-            video_file = uploaded_file[0]["body"]
-            extn = os.path.splitext(uploaded_file[0]['filename'])[1].replace(".","")
+            video_file = self.request.files['videoFile'][0]["body"]
+            video = VideoController().createVideo(user_id, contest_id, name_video,  email, names_user, lastnames_user, video_file)
 
-            video = VideoController().createVideo(user_id, contest_id, name_video,  email, names_user, lastnames_user, video_file, extn)
             user = UserController().getUserId(user_id)
             contest = ContestController().getContest(contest_id)
             videos = VideoController().getContestOkVideos(contest_id)
@@ -168,7 +166,7 @@ class VideoHandler(BaseHandler):
             if video is None:
                 self.render(settings["static_path"]+"/pages/video.html", user = user, contest = contest, error = True)
             else:
-               self.redirect("/contest/"+url)
+                self.render(settings["static_path"]+"/pages/contest.html",user = user, contest = contest,videos = videos, video_upload=True, pages = pages)
 
 class ContestPublicHandler(BaseHandler):
     def get(self):
@@ -177,18 +175,14 @@ class ContestPublicHandler(BaseHandler):
         contest = ContestController().getURLContest(url)
         videos = VideoController().getContestVideo(contest.id)
         pages = int(math.ceil(len(videos)/9.0))
-        if not self.get_secure_cookie("user"):
-            self.render(settings["static_path"]+"/pages/contest.html",user = self.current_user, contest = contest, videos = videos, pages = pages, login=False)
-        else:
-            self.render(settings["static_path"]+"/pages/contest.html",user = self.current_user, contest = contest, videos = videos, pages = pages, login=True)
+        self.render(settings["static_path"]+"/pages/contest.html",user = self.current_user, contests = contest, videos = videos, pages = pages)
 
 class MainHandler(BaseHandler):
     def get(self):
         user = UserController().getLatestUser()
         videos = VideoController().getLatestVideo()
-        #contest = ContestController().getContestAll()
         if not self.get_secure_cookie("user"):
-            self.render(settings["static_path"]+"/index.html",user=user, videos=videos, login=False )
+            self.render(settings["static_path"]+"/index.html",user=user, videos=videos, login=False)
         else:
             self.render(settings["static_path"]+"/index.html",user=user, videos=videos, login=True, current_user=self.current_user)
 
@@ -212,7 +206,7 @@ if __name__ == "__main__":
         (r"/video/.*", VideoHandler),
         (r"/admin", AdminHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler,
-        {"path": settings["static_path"]})
+            {"path": settings["static_path"]})
     ], **settings)
 
     application.listen(8800)

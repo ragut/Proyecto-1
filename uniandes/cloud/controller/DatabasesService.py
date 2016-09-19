@@ -40,9 +40,6 @@ class DatabasesController():
     def getContest(self, id):                       #//OK
         return self.database.getContest(id)
 
-    def getURLContest(self, url):                       #//OK
-        return self.database.getURLContest(url)
-
     def updateContest(self, contest):               #//OK
         return self.database.updateContest(contest)
 
