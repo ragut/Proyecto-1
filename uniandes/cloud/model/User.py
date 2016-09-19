@@ -1,5 +1,5 @@
 import base64
-from ..controller.DatabasesService import DatabasesController
+from ..controller.DatabasesController import DatabasesController
 
 class User():
 
@@ -24,6 +24,7 @@ class User():
         self.lastnames = lastnames
         self.email = email
         self.password = base64.b64encode(password)
+        #self.password = password
 
     def set_variables_db(self, dictionary):
         self.id = str(dictionary["_id"])
@@ -41,7 +42,7 @@ class User():
             if dictionary["password"] is None:
                 self.password = None
             else:
-                self.password = base64.b64decode(dictionary["password"])
+                self.password = dictionary["password"]
         else:
             self.password = None
 

@@ -1,6 +1,5 @@
 import datetime
 import peewee as pw
-from decimal import Decimal
 
 db = pw.MySQLDatabase('cloud_2016_concurso',
                       host='127.0.0.1',
@@ -185,6 +184,13 @@ class MySQLDBConnector():
         except:
             db.close()
             return None
+
+    def getContestAll(self):
+        contests = []
+        for contest in Contest.select().order_by(Contest.id.desc()):
+            contests.append(contest.to_dictionary())
+        db.close()
+        return contests
 
     def getURLContest(self, url):
         try:

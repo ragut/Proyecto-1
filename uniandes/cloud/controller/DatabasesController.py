@@ -40,6 +40,9 @@ class DatabasesController():
     def getContest(self, id):                       #//OK
         return self.database.getContest(id)
 
+    def getContestAll(self):                       #//OK
+        return self.database.getContestAll()
+
     def getURLContest(self, url):                       #//OK
         return self.database.getURLContest(url)
 

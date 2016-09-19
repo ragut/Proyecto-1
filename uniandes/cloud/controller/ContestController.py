@@ -17,7 +17,7 @@ class ContestController():
     def insertContest(self, user_id, names, date_ini, deadline, description, url, baner):
         contest = Contest()
         contest.set_variables_contest(user_id, names, date_ini, deadline, description, url)
-        img = ImageService().generate_img_thumnail_from_data(baner)
+        img = ImageService().generate_img(baner)
         self.fileSystem.save_contest_banner(img, contest.banner)
         return self.database.createContest(contest)
 
@@ -36,6 +36,12 @@ class ContestController():
         data = self.database.getContest(contest_id)
         contest = Contest()
         contest.set_variables_db(data)
+        return contest
+
+    def getContestAll(self):
+        data = self.database.getContestAll()
+        contest = Contest()
+        contest.set_variables_db_2(data)
         return contest
 
     #//-----    OBTIENE CONCURSO ESPECIFICO ----//
