@@ -17,8 +17,6 @@ class UserController():
     def add_User(self, names, lastnames, email, password):
         user = User()
         user.set_variables_user(names, lastnames, email, password)
-# //img = ImageService().generate_img_thumnail_from_data(logo)
- #    //self.fileSystem.save_company_logo(img, user.logo_filename)
         data = self.database.createUser(user)
 
         if data is None:

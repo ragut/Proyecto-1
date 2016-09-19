@@ -40,11 +40,17 @@ class DatabasesController():
     def getContest(self, id):                       #//OK
         return self.database.getContest(id)
 
+    def getContestAll(self):                       #//OK
+        return self.database.getContestAll()
+
     def getURLContest(self, url):                       #//OK
         return self.database.getURLContest(url)
 
     def updateContest(self, contest):               #//OK
         return self.database.updateContest(contest)
+
+    def updateContestBanner(self, contest):               #//OK
+        return self.database.updateContestBanner(contest)
 
     def deleteContest(self, id):                    #//OK
         return self.database.deleteContest(id)

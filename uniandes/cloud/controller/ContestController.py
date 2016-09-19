@@ -17,8 +17,9 @@ class ContestController():
     def insertContest(self, user_id, names, date_ini, deadline, description, url, baner):
         contest = Contest()
         contest.set_variables_contest(user_id, names, date_ini, deadline, description, url)
-        img = ImageService().generate_img_thumnail_from_data(baner)
+        img = ImageService().generate_img(baner)
         self.fileSystem.save_contest_banner(img, contest.banner)
+
         return self.database.createContest(contest)
 
 #//---- OBTIENE CONCURSOS POR USUARIO   ----//
@@ -38,6 +39,12 @@ class ContestController():
         contest.set_variables_db(data)
         return contest
 
+    def getContestAll(self):
+        data = self.database.getContestAll()
+        contest = Contest()
+        contest.set_variables_db_2(data)
+        return contest
+
     #//-----    OBTIENE CONCURSO ESPECIFICO ----//
     def getURLContest(self, contest_url):
         data = self.database.getURLContest(contest_url)
@@ -49,10 +56,11 @@ class ContestController():
     def updateContest(self, id, user_id,  name, date_ini, deadline, description, url, baner):
         contest = Contest()
         contest.set_variables_contest(user_id,  name, date_ini, deadline, description, url)
-        #if baner is not None:
+        contest.set_id(id)
+
         img = ImageService().generate_img(baner)
         self.fileSystem.save_contest_banner(img, contest.banner)
-        contest.set_id(id)
+
         return self.database.updateContest(contest)
 
 #//-----    ELIMINA CONCURSO ESPECIFICO ----//
